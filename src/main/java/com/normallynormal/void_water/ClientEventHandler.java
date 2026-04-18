@@ -1,12 +1,16 @@
 package com.normallynormal.void_water;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import net.minecraft.world.phys.Vec3;
 
 @EventBusSubscriber(modid = VoidWaterMod.MODID, value = Dist.CLIENT)
 public class ClientEventHandler {
@@ -34,6 +38,24 @@ public class ClientEventHandler {
         if (!event.getLevel().isClientSide()) return;
         var chunkPos = event.getChunk().getPos();
         ClientTrailData.removeChunk(chunkPos.x, chunkPos.z);
+    }
+
+    @SubscribeEvent
+    public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
+        if (ClientTrailData.getAll().isEmpty()) return;
+        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        Vec3 camPos = event.getLevelRenderState().cameraRenderState.pos;
+        if (camPos.y >= Util.getMinYForLevel()) return;
+        VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
+    }
+
+    @SubscribeEvent
+    public static void onRenderLevel(RenderLevelStageEvent.AfterOpaqueBlocks event) {
+        if (ClientTrailData.getAll().isEmpty()) return;
+        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        Vec3 camPos = event.getLevelRenderState().cameraRenderState.pos;
+        if (camPos.y < Util.getMinYForLevel()) return;
+        VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
     }
 
     @SubscribeEvent

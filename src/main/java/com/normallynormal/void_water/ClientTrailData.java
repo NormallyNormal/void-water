@@ -3,6 +3,7 @@ package com.normallynormal.void_water;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,6 +52,10 @@ public class ClientTrailData {
             int z = VoidTrailData.unpackZ(packed);
             return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
         });
+    }
+
+    public static Map<Long, Integer> getAll() {
+        return Collections.unmodifiableMap(TRAIL_LENGTHS);
     }
 
     public static int getTrailLength(BlockPos pos) {

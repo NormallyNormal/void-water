@@ -10,10 +10,7 @@
   ],
   "client": [
     "LiquidBlockRendererMixin",
-    "SectionCompilerMixin",
-    "SectionRendererDispatcherMixin",
-    "SectionOcclusionGraphMixin",
-    "FrustumMixin"
+    "ItemBlockRenderTypesMixin"
   ],
   "injectors": {
     "defaultRequire": 1
