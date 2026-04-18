@@ -31,7 +31,14 @@ public class Config
     }
 
     @SubscribeEvent
-    static void onLoad(final ModConfigEvent event)
+    static void onLoad(final ModConfigEvent.Loading event)
+    {
+        trailLength = TRAIL_LENGTH.get();
+        trailDecay = TRAIL_DECAY.get();
+    }
+
+    @SubscribeEvent
+    static void onReload(final ModConfigEvent.Reloading event)
     {
         trailLength = TRAIL_LENGTH.get();
         trailDecay = TRAIL_DECAY.get();
