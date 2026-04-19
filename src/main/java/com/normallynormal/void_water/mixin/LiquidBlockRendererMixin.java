@@ -18,25 +18,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LiquidBlockRenderer.class)
 public abstract class LiquidBlockRendererMixin {
 
-    @ModifyVariable(
-            method = "tesselate",
-            at = @At(value = "STORE"),
-            ordinal = 0,
-            require = 1
-    )
-    private boolean modifyFlag0(
-            boolean originalFlag,
-            BlockAndTintGetter level,
-            BlockPos pos,
-            VertexConsumer buffer,
-            BlockState blockState,
-            FluidState fluidState
-    ) {
-        if (pos.getY() == Util.getMinYForLevel() && ClientTrailData.getTrailLength(pos) > 0) {
-            return false;
-        }
-        return originalFlag;
-    }
+//    @ModifyVariable(
+//            method = "tesselate",
+//            at = @At(value = "STORE"),
+//            ordinal = 0,
+//            require = 1
+//    )
+//    private boolean modifyFlag0(
+//            boolean originalFlag,
+//            BlockAndTintGetter level,
+//            BlockPos pos,
+//            VertexConsumer buffer,
+//            BlockState blockState,
+//            FluidState fluidState
+//    ) {
+//        if (pos.getY() == Util.getMinYForLevel() && ClientTrailData.getTrailLength(pos) > 0) {
+//            return false;
+//        }
+//        return originalFlag;
+//    }
 
     @ModifyVariable(
             method = "tesselate",
