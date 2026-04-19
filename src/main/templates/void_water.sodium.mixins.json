@@ -1,0 +1,12 @@
+{
+  "required": false,
+  "package": "com.normallynormal.void_water.mixin.sodium",
+  "plugin": "com.normallynormal.void_water.mixin.sodium.VoidWaterSodiumMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "SodiumFluidRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
