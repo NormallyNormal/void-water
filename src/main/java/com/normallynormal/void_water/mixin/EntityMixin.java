@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.InsideBlockEffectApplier;
+
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
@@ -49,10 +49,10 @@ public class EntityMixin {
     private AABB bb;
 
     @Inject(
-            method = "updateFluidHeightAndDoFluidPushing(Z)V",
+            method = "updateFluidHeightAndDoFluidPushing()V",
             at = @At("RETURN")
     )
-    private void modifyFluidPushing(boolean doFluidPushing, CallbackInfo ci) {
+    private void modifyFluidPushing(CallbackInfo ci) {
         Level level = this.level();
         if (level.isClientSide() && !ClientTrailData.serverHasMod) return;
         int levelFloor = Util.getMinYForLevel(level);
@@ -89,7 +89,7 @@ public class EntityMixin {
     }
 
     @Inject(method = "checkInsideBlocks", at = @At("RETURN"))
-    private void onCheckInsideBlocks(List<?> blocks, InsideBlockEffectApplier.StepBasedCollector applier, CallbackInfo ci) {
+    private void onCheckInsideBlocks(CallbackInfo ci) {
         Level level = this.level();
         if (level.isClientSide() && !ClientTrailData.serverHasMod) return;
         int minY = Util.getMinYForLevel(level);
@@ -109,7 +109,7 @@ public class EntityMixin {
                 mutablePos.set(x, minY, z);
                 FluidState fs = level.getFluidState(mutablePos);
                 if (!fs.isEmpty() && processed.add(fs.getFluidType())) {
-                    fs.entityInside(level, mutablePos.immutable(), (Entity)(Object)this, applier);
+                    level.getBlockState(mutablePos).entityInside(level, mutablePos.immutable(), (Entity)(Object)this);
                 }
             }
         }

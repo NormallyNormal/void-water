@@ -41,21 +41,19 @@ public class ClientEventHandler {
     }
 
     @SubscribeEvent
-    public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
+    public static void onRenderLevel(RenderLevelStageEvent event) {
         if (ClientTrailData.getAll().isEmpty()) return;
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        Vec3 camPos = event.getLevelRenderState().cameraRenderState.pos;
-        if (camPos.y >= Util.getMinYForLevel()) return;
-        VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
-    }
-
-    @SubscribeEvent
-    public static void onRenderLevel(RenderLevelStageEvent.AfterOpaqueBlocks event) {
-        if (ClientTrailData.getAll().isEmpty()) return;
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        Vec3 camPos = event.getLevelRenderState().cameraRenderState.pos;
-        if (camPos.y < Util.getMinYForLevel()) return;
-        VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
+            MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+            Vec3 camPos = event.getCamera().getPosition();
+            if (camPos.y >= Util.getMinYForLevel()) return;
+            VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
+        } else if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) {
+            MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+            Vec3 camPos = event.getCamera().getPosition();
+            if (camPos.y < Util.getMinYForLevel()) return;
+            VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
+        }
     }
 
     @SubscribeEvent

@@ -7,8 +7,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.LiquidBlockRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,7 +30,7 @@ public class VoidTrailRenderer {
 
         int minY = Util.getMinYForLevel(level);
         Matrix4f pose = poseStack.last().pose();
-        VertexConsumer buffer = bufferSource.getBuffer(RenderTypes.translucentMovingBlock());
+        VertexConsumer buffer = bufferSource.getBuffer(RenderType.translucentMovingBlock());
 
         for (Map.Entry<Long, Integer> entry : ClientTrailData.getAll().entrySet()) {
             int trailLength = entry.getValue();
@@ -47,7 +46,7 @@ public class VoidTrailRenderer {
             renderTrail(buffer, pose, level, pos, fs, trailLength, camPos);
         }
 
-        bufferSource.endBatch(RenderTypes.translucentMovingBlock());
+        bufferSource.endBatch(RenderType.translucentMovingBlock());
     }
 
     private static void renderTrail(VertexConsumer buffer, Matrix4f pose, BlockAndTintGetter level,
@@ -72,10 +71,10 @@ public class VoidTrailRenderer {
         int trailEast  = ClientTrailData.getTrailLength(pos.relative(Direction.EAST));
 
         BlockState blockState = level.getBlockState(pos);
-        boolean renderNorth = LiquidBlockRenderer.shouldRenderFace(fs, blockState, Direction.NORTH, level.getBlockState(pos.relative(Direction.NORTH)).getFluidState());
-        boolean renderSouth = LiquidBlockRenderer.shouldRenderFace(fs, blockState, Direction.SOUTH, level.getBlockState(pos.relative(Direction.SOUTH)).getFluidState());
-        boolean renderWest  = LiquidBlockRenderer.shouldRenderFace(fs, blockState, Direction.WEST,  level.getBlockState(pos.relative(Direction.WEST)).getFluidState());
-        boolean renderEast  = LiquidBlockRenderer.shouldRenderFace(fs, blockState, Direction.EAST,  level.getBlockState(pos.relative(Direction.EAST)).getFluidState());
+        boolean renderNorth = LiquidBlockRenderer.shouldRenderFace(level, pos, fs, blockState, Direction.NORTH, level.getBlockState(pos.relative(Direction.NORTH)).getFluidState());
+        boolean renderSouth = LiquidBlockRenderer.shouldRenderFace(level, pos, fs, blockState, Direction.SOUTH, level.getBlockState(pos.relative(Direction.SOUTH)).getFluidState());
+        boolean renderWest  = LiquidBlockRenderer.shouldRenderFace(level, pos, fs, blockState, Direction.WEST,  level.getBlockState(pos.relative(Direction.WEST)).getFluidState());
+        boolean renderEast  = LiquidBlockRenderer.shouldRenderFace(level, pos, fs, blockState, Direction.EAST,  level.getBlockState(pos.relative(Direction.EAST)).getFluidState());
 
         float wx = (float)(pos.getX() - camPos.x);
         float wy = (float)(pos.getY() - camPos.y);

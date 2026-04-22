@@ -41,7 +41,7 @@ public abstract class LiquidBlockRendererMixin {
     @ModifyVariable(
             method = "tesselate",
             at = @At(value = "STORE"),
-            ordinal = 1,
+            ordinal = 2,
             require = 1
     )
     private boolean modifyFlag1(

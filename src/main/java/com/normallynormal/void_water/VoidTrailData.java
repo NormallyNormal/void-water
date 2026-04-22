@@ -4,8 +4,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,10 +36,20 @@ public class VoidTrailData extends SavedData {
             .toList()
     );
 
-    public static final SavedDataType<VoidTrailData> TYPE = new SavedDataType<>(
-        "void_water_trails",
+    @Override
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
+        tag.put("data", CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), this).getOrThrow(IllegalStateException::new));
+        return tag;
+    }
+
+    public static VoidTrailData load(CompoundTag tag, HolderLookup.Provider provider) {
+        if (!tag.contains("data")) return new VoidTrailData();
+        return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag.get("data")).getOrThrow(IllegalStateException::new);
+    }
+
+    public static final SavedData.Factory<VoidTrailData> FACTORY = new SavedData.Factory<>(
         VoidTrailData::new,
-        CODEC,
+        VoidTrailData::load,
         DataFixTypes.LEVEL
     );
 
@@ -93,6 +105,6 @@ public class VoidTrailData extends SavedData {
     }
 
     public static VoidTrailData getOrCreate(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(TYPE);
+        return level.getDataStorage().computeIfAbsent(FACTORY, "void_water_trails");
     }
 }
