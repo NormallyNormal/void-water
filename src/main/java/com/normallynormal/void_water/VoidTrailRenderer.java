@@ -8,13 +8,13 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.LiquidBlockRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.client.textures.FluidSpriteCache;
@@ -31,7 +31,6 @@ public class VoidTrailRenderer {
 
         int minY = Util.getMinYForLevel(level);
         Matrix4f pose = poseStack.last().pose();
-        VertexConsumer buffer = bufferSource.getBuffer(RenderTypes.translucentMovingBlock());
 
         for (Map.Entry<Long, Integer> entry : ClientTrailData.getAll().entrySet()) {
             int trailLength = entry.getValue();
@@ -44,10 +43,20 @@ public class VoidTrailRenderer {
             FluidState fs = level.getFluidState(pos);
             if (fs.isEmpty()) continue;
 
+            RenderType type = renderTypeFor(fs);
+            VertexConsumer buffer = bufferSource.getBuffer(type);
             renderTrail(buffer, pose, level, pos, fs, trailLength, camPos);
         }
 
-        bufferSource.endBatch(RenderTypes.translucentMovingBlock());
+        bufferSource.endBatch(VoidFluidRenderTypes.SOLID_VOID_FLUID);
+        bufferSource.endBatch(VoidFluidRenderTypes.TRANSLUCENT_VOID_FLUID);
+    }
+
+    private static RenderType renderTypeFor(FluidState fs) {
+        if (fs.getType().isSame(Fluids.LAVA) || fs.getType().isSame(Fluids.FLOWING_LAVA)) {
+            return VoidFluidRenderTypes.SOLID_VOID_FLUID;
+        }
+        return VoidFluidRenderTypes.TRANSLUCENT_VOID_FLUID;
     }
 
     private static void renderTrail(VertexConsumer buffer, Matrix4f pose, BlockAndTintGetter level,
@@ -82,6 +91,8 @@ public class VoidTrailRenderer {
         float wz = (float)(pos.getZ() - camPos.z);
 
         int light = getLightColor(level, pos);
+
+        IrisCompat.beginFluidBlock(buffer, fs, pos);
 
         for (Direction direction : Direction.Plane.HORIZONTAL) {
             float x1, x2, z1, z2, nx, nz;
@@ -176,6 +187,8 @@ public class VoidTrailRenderer {
         vertex(buffer, pose, wx + 1, capY, wz,     capRed, capGreen, capBlue, capAlpha, cu1, cv0, light, 0, 1, 0);
         vertex(buffer, pose, wx,     capY, wz,     capRed, capGreen, capBlue, capAlpha, cu0, cv0, light, 0, 1, 0);
         vertex(buffer, pose, wx,     capY, wz + 1, capRed, capGreen, capBlue, capAlpha, cu0, cv1, light, 0, 1, 0);
+
+        IrisCompat.endFluidBlock(buffer);
     }
 
     private static int getLightColor(BlockAndTintGetter level, BlockPos pos) {

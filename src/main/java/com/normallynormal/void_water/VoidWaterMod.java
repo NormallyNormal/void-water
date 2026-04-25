@@ -13,6 +13,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterRenderPipelinesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -75,6 +76,15 @@ public class VoidWaterMod
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
+            IrisCompat.assignTranslucentPipeline(VoidFluidRenderTypes.TRANSLUCENT_VOID_FLUID_PIPELINE);
+            IrisCompat.assignTerrainSolidPipeline(VoidFluidRenderTypes.SOLID_VOID_FLUID_PIPELINE);
+        }
+
+        @SubscribeEvent
+        public static void onRegisterRenderPipelines(RegisterRenderPipelinesEvent event)
+        {
+            event.registerPipeline(VoidFluidRenderTypes.TRANSLUCENT_VOID_FLUID_PIPELINE);
+            event.registerPipeline(VoidFluidRenderTypes.SOLID_VOID_FLUID_PIPELINE);
         }
     }
 }
