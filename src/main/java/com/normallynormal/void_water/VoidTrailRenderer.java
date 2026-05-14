@@ -30,7 +30,7 @@ public class VoidTrailRenderer {
 
         int minY = Util.getMinYForLevel(level);
         Matrix4f pose = poseStack.last().pose();
-        VertexConsumer buffer = bufferSource.getBuffer(RenderType.translucentMovingBlock());
+        VertexConsumer buffer = bufferSource.getBuffer(RenderType.translucent());
 
         for (Map.Entry<Long, Integer> entry : ClientTrailData.getAll().entrySet()) {
             int trailLength = entry.getValue();
@@ -46,7 +46,7 @@ public class VoidTrailRenderer {
             renderTrail(buffer, pose, level, pos, fs, trailLength, camPos);
         }
 
-        bufferSource.endBatch(RenderType.translucentMovingBlock());
+        bufferSource.endBatch(RenderType.translucent());
     }
 
     private static void renderTrail(VertexConsumer buffer, Matrix4f pose, BlockAndTintGetter level,
@@ -80,7 +80,12 @@ public class VoidTrailRenderer {
         float wy = (float)(pos.getY() - camPos.y);
         float wz = (float)(pos.getZ() - camPos.z);
 
-        int light = getLightColor(level, pos);
+        // Match vanilla LiquidBlockRenderer.getLightColor: the side face of a water block uses the
+        // max of the lightmap at pos and pos.above so an emissive block sitting above the column
+        // brightens the face the same way it brightens the actual water block at y=minY. Without
+        // this, our trail's top edge reads one light level darker than the vanilla-rendered water
+        // block above whenever there's a vertical light gradient (light source 2+ blocks up).
+        int light = getSideFaceLight(level, pos);
 
         for (Direction direction : Direction.Plane.HORIZONTAL) {
             float x1, x2, z1, z2, nx, nz;
@@ -114,13 +119,6 @@ public class VoidTrailRenderer {
                 }
             }
 
-            if (renderFace && sprites[2] != null) {
-                BlockPos neighborPos = pos.relative(direction);
-                if (level.getBlockState(neighborPos).shouldDisplayFluidOverlay(level, neighborPos, fs)) {
-                    sideSprite = sprites[2];
-                }
-            }
-
             float faceShade  = direction.getAxis() == Direction.Axis.Z ? northShade : westShade;
             float shadedRed   = upShade * faceShade * red;
             float shadedGreen = upShade * faceShade * green;
@@ -140,15 +138,15 @@ public class VoidTrailRenderer {
                     float yTop    = wy + 1 - depth + 0.001f;
                     float yBottom = wy     - depth + 0.001f;
 
-                    vertex(buffer, pose, x1, yTop,    z1, shadedRed, shadedGreen, shadedBlue, topAlpha,    u0, v0, light,  nx, 0,  nz);
-                    vertex(buffer, pose, x2, yTop,    z2, shadedRed, shadedGreen, shadedBlue, topAlpha,    u1, v0, light,  nx, 0,  nz);
-                    vertex(buffer, pose, x2, yBottom, z2, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u1, v1, light,  nx, 0,  nz);
-                    vertex(buffer, pose, x1, yBottom, z1, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u0, v1, light,  nx, 0,  nz);
+                    vertex(buffer, pose, x1, yTop,    z1, shadedRed, shadedGreen, shadedBlue, topAlpha,    u0, v0, light, 0, 1, 0);
+                    vertex(buffer, pose, x2, yTop,    z2, shadedRed, shadedGreen, shadedBlue, topAlpha,    u1, v0, light, 0, 1, 0);
+                    vertex(buffer, pose, x2, yBottom, z2, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u1, v1, light, 0, 1, 0);
+                    vertex(buffer, pose, x1, yBottom, z1, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u0, v1, light, 0, 1, 0);
 
-                    vertex(buffer, pose, x1, yBottom, z1, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u0, v1, light, -nx, 0, -nz);
-                    vertex(buffer, pose, x2, yBottom, z2, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u1, v1, light, -nx, 0, -nz);
-                    vertex(buffer, pose, x2, yTop,    z2, shadedRed, shadedGreen, shadedBlue, topAlpha,    u1, v0, light, -nx, 0, -nz);
-                    vertex(buffer, pose, x1, yTop,    z1, shadedRed, shadedGreen, shadedBlue, topAlpha,    u0, v0, light, -nx, 0, -nz);
+                    vertex(buffer, pose, x1, yBottom, z1, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u0, v1, light, 0, 1, 0);
+                    vertex(buffer, pose, x2, yBottom, z2, shadedRed, shadedGreen, shadedBlue, bottomAlpha, u1, v1, light, 0, 1, 0);
+                    vertex(buffer, pose, x2, yTop,    z2, shadedRed, shadedGreen, shadedBlue, topAlpha,    u1, v0, light, 0, 1, 0);
+                    vertex(buffer, pose, x1, yTop,    z1, shadedRed, shadedGreen, shadedBlue, topAlpha,    u0, v0, light, 0, 1, 0);
                 }
 
                 topAlpha = bottomAlpha;
@@ -177,12 +175,12 @@ public class VoidTrailRenderer {
         vertex(buffer, pose, wx,     capY, wz + 1, capRed, capGreen, capBlue, capAlpha, cu0, cv1, light, 0, 1, 0);
     }
 
-    private static int getLightColor(BlockAndTintGetter level, BlockPos pos) {
+    private static int getSideFaceLight(BlockAndTintGetter level, BlockPos pos) {
         int i = LevelRenderer.getLightColor(level, pos);
         int j = LevelRenderer.getLightColor(level, pos.above());
-        int k = i & 0xFF, l = j & 0xFF;
-        int i1 = i >> 16 & 0xFF, j1 = j >> 16 & 0xFF;
-        return (k > l ? k : l) | (i1 > j1 ? i1 : j1) << 16;
+        int block = Math.max(i & 0xFF, j & 0xFF);
+        int sky   = Math.max((i >> 16) & 0xFF, (j >> 16) & 0xFF);
+        return block | (sky << 16);
     }
 
     private static void vertex(VertexConsumer buf, Matrix4f pose,

@@ -26,7 +26,7 @@ public abstract class SodiumFluidRendererMixin {
     @ModifyVariable(
             method = "render",
             at = @At(value = "STORE"),
-            ordinal = 1,
+            name = "cullDown",
             require = 1
     )
     private boolean voidWater$suppressDownFace(boolean original,
@@ -42,7 +42,7 @@ public abstract class SodiumFluidRendererMixin {
                                                 TextureAtlasSprite[] sprites) {
         if (blockPos.getY() == Util.getMinYForLevel()
                 && ClientTrailData.getTrailLength(blockPos) > 0) {
-            return false;
+            return true;
         }
         return original;
     }
