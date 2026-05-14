@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
@@ -14,6 +15,17 @@ import net.minecraft.world.phys.Vec3;
 
 @EventBusSubscriber(modid = VoidWaterMod.MODID, value = Dist.CLIENT)
 public class ClientEventHandler {
+
+    private static final boolean SODIUM_LOADED = ModList.get() != null && ModList.get().isLoaded("sodium");
+
+    private static void dispatchRender(MultiBufferSource.BufferSource bufferSource,
+                                       com.mojang.blaze3d.vertex.PoseStack poseStack, Vec3 camPos) {
+        if (SODIUM_LOADED) {
+            VoidTrailRendererSodium.render(poseStack, bufferSource, camPos);
+        } else {
+            VoidTrailRenderer.render(poseStack, bufferSource, camPos);
+        }
+    }
 
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
@@ -46,7 +58,7 @@ public class ClientEventHandler {
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
         Vec3 camPos = event.getLevelRenderState().cameraRenderState.pos;
         if (camPos.y >= Util.getMinYForLevel()) return;
-        VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
+        dispatchRender(bufferSource, event.getPoseStack(), camPos);
     }
 
     @SubscribeEvent
@@ -55,7 +67,7 @@ public class ClientEventHandler {
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
         Vec3 camPos = event.getLevelRenderState().cameraRenderState.pos;
         if (camPos.y < Util.getMinYForLevel()) return;
-        VoidTrailRenderer.render(event.getPoseStack(), bufferSource, camPos);
+        dispatchRender(bufferSource, event.getPoseStack(), camPos);
     }
 
     @SubscribeEvent
